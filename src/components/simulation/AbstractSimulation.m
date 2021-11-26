@@ -31,7 +31,7 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 		% neighbourhoodBasedForces AbstractNeighbourhoodBasedForce
 		tissueBasedForces AbstractTissueBasedForce
 
-		% stoppingConditions AbstractStoppingCondition
+		stoppingConditions AbstractStoppingCondition
 
 		stopped = false
 
@@ -86,9 +86,9 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 
 			obj.CollateData();
 
-			% if obj.IsStoppingConditionMet()
-			% 	obj.stopped = true;
-			% end
+			if obj.IsStoppingConditionMet()
+				obj.stopped = true;
+			end
 
 		end
 
