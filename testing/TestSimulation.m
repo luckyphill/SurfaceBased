@@ -15,11 +15,11 @@ classdef TestSimulation < matlab.unittest.TestCase
 			e1 = Edge(n1,n2);
 			e2 = Edge(n2,n3);
 			e3 = Edge(n3,n1);
-			s = Surface(e1,e2,e3);
+			s = Face(e1,e2,e3);
 
 			t.AddNodesToSimulation([n1,n2,n3]);
 			t.AddEdgesToSimulation([e1,e2,e3]);
-			t.AddSurfacesToSimulation(s);
+			t.AddFacesToSimulation(s);
 
 			u = s.GetUnitNormal();
 			F = 2*u;

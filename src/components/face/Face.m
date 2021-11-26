@@ -1,24 +1,24 @@
-classdef Surface < matlab.mixin.SetGet
+classdef Face < matlab.mixin.SetGet
 	% A class specifying the details about nodes
 
 	properties
-		% Essential porperties of an surface
+		% Essential porperties of an face
 		id = 0; % Handled by simulation object
 
-		% The 'total drag' for the surface at the centre of drag
-		% This will be constant for an surface, unless the 
+		% The 'total drag' for the face at the centre of drag
+		% This will be constant for an face, unless the 
 		% coeficient of drag is changed for a node
 		etaD 
 
-		% This will be circular - each surface will have three nodes
-		% each node can be part of multiple surfaces
+		% This will be circular - each face will have three nodes
+		% each node can be part of multiple faces
 		Node1
 		Node2
 		Node3
 
-		% Used only when an surface is modified during cell
+		% Used only when an face is modified during cell
 		% division. Keep track of the old node to help with
-		% adjusting the surface boxes
+		% adjusting the face boxes
 		oldNode1
 		oldNode2
 		oldNode3
@@ -43,7 +43,7 @@ classdef Surface < matlab.mixin.SetGet
 
 		internal = false
 
-		% Detemines if a surface is part of a membrane, hence
+		% Detemines if a face is part of a membrane, hence
 		% should be subject to membrane related forces
 		isMembrane = false
 		
@@ -51,18 +51,18 @@ classdef Surface < matlab.mixin.SetGet
 
 	methods
 
-		function obj = Surface(Edge1,Edge2,Edge3)
+		function obj = Face(Edge1,Edge2,Edge3)
 
-			% A surface is defined by three edges
+			% A face is defined by three edges
 			% These edges must be connected in an anticlockwise loop
 			% according to the order they are supplied
 
 			% Comprehensive error checking must be done here to ensure
-			% surfaces are constructed properly.
+			% faces are constructed properly.
 
 			% The nodes and edges must be given their local indices
 
-			obj.AddEdgesToSurface(Edge1,Edge2,Edge3);
+			obj.AddEdgesToFace(Edge1,Edge2,Edge3);
 			
 		end
 
@@ -74,7 +74,7 @@ classdef Surface < matlab.mixin.SetGet
 
 		function etaD = GetTotalDrag(obj)
 			
-			% Total drag of the surface assuming pooint drag at the nodes
+			% Total drag of the face assuming pooint drag at the nodes
 
 			etaD = obj.Node1.eta + obj.Node2.eta + obj.Node3.eta;
 
@@ -105,7 +105,7 @@ classdef Surface < matlab.mixin.SetGet
 		function ID = GetDragMatrix(obj)
 			
 			% Construct the drag matrix based on the current
-			% configuration of the surface, with the values
+			% configuration of the face, with the values
 			% taken in an axis centred at rD, but with unit vectors
 			% identical to the fixed, global system
 
@@ -139,12 +139,12 @@ classdef Surface < matlab.mixin.SetGet
 
 		function outward = GetUnitNormal(obj)
 			
-			% The unit normal to the surface pointing in the upward direction
+			% The unit normal to the face pointing in the upward direction
 			% as defined using the right-hand rule traversing the nodes in order 1 2 3 
 			ve1 = obj.Node2.pos - obj.Node1.pos;
 			ve2 = obj.Node3.pos - obj.Node2.pos; 
 
-			% Take the cross product to get a vector normal to the surface
+			% Take the cross product to get a vector normal to the face
 			u = cross(ve1,ve2);
 
 			outward = u / norm(u);
@@ -154,7 +154,7 @@ classdef Surface < matlab.mixin.SetGet
 		function [u,v,w] = GetCoordinateSystem(obj)
 
 			% Returns the coordinate system attached to the
-			% surface with origin at rD.
+			% face with origin at rD.
 			% The z axis is the unit normal
 			% The y axis is from rD to Node2
 			% The x axis is determined from these by the 
@@ -189,11 +189,11 @@ classdef Surface < matlab.mixin.SetGet
 		function [IDx,IDy,IDxy,IDz] = GetDragMatrixLocal(obj)
 			
 			% Construct the drag matrix based on the current
-			% configuration of the surface, with the values
+			% configuration of the face, with the values
 			% taken in the body (local) system of coordinates
 
 			% In the local system of coordinates, rD is the origin
-			% the z axis is the surface normal, and the y axis
+			% the z axis is the face normal, and the y axis
 			% goes from rD to Node2. The x axis follows from
 			% these via a cross product and the right hand rule
 
@@ -227,7 +227,7 @@ classdef Surface < matlab.mixin.SetGet
 
 		function surfArea = GetArea(obj)
 
-			% Returns the area of the surface
+			% Returns the area of the face
 			% This can be found by taking the cross product
 			% of two vectors that form adjacent sides of the triangle
 			% Keep the same starting point for consistency
@@ -245,9 +245,9 @@ classdef Surface < matlab.mixin.SetGet
 				error('N:ApplyForce:InfNaN', 'Force is inf or NaN');
 			end
 
-			% Verify that A is on the surface
+			% Verify that A is on the face
 
-			% Applying a force to the surface at point A
+			% Applying a force to the face at point A
 			% This results in a linear movement, and a rotation
 
 			% Linear movement
@@ -268,7 +268,7 @@ classdef Surface < matlab.mixin.SetGet
 
 		function ApplyTorque(obj, torque)
 			
-			% Gather the torques applied to the surface.
+			% Gather the torques applied to the face.
 			% This will be converted to a force on the nodes in the simulation
 			obj.torque = obj.torque + torque;
 
@@ -278,7 +278,7 @@ classdef Surface < matlab.mixin.SetGet
 
 			% c can be a vector
 			if sum( ismember(c,obj.cellList)) ~=0
-				warning('E:AddCell:CellAlreadyHere', 'Adding at least one cell that already appears in cellList for Surface %d. This has not been added.', obj.id);
+				warning('E:AddCell:CellAlreadyHere', 'Adding at least one cell that already appears in cellList for Face %d. This has not been added.', obj.id);
 				c(ismember(c,obj.cellList)) = [];
 			end
 			obj.cellList = [obj.cellList , c];
@@ -309,33 +309,33 @@ classdef Surface < matlab.mixin.SetGet
 
 			% Remove the cell from the list
 			if sum(obj.cellList == c) == 0
-				warning('E:RemoveCell:CellNotHere', 'At least one cell does not appear in surfaceList for Surface %d', obj.id);
+				warning('E:RemoveCell:CellNotHere', 'At least one cell does not appear in faceList for Face %d', obj.id);
 			else
 				obj.cellList(obj.cellList == c) = [];
 			end
 
 		end
 
-		function internal = IsSurfaceInternal(obj)
+		function internal = IsFaceInternal(obj)
 
 			internal = obj.internal;
 
 		end
 
-		function AddEdgesToSurface(obj, e1, e2, e3)
+		function AddEdgesToFace(obj, e1, e2, e3)
 
 			% Need to make sure the edges are connected and form a
 			% closed loop
 
-			% It is also important that the surface normal points in
-			% a consistant direction when the surface is joined to
-			% multiple other surfaces in a mesh, but we don't
+			% It is also important that the face normal points in
+			% a consistant direction when the face is joined to
+			% multiple other faces in a mesh, but we don't
 			% consider that here.
 
 			nodes = [e1.nodeList, e2.nodeList, e3.nodeList];
 
 			% There must be exactly three unique nodes in this list,
-			% any difference means the surface cannot be formed
+			% any difference means the face cannot be formed
 
 			uNodes = unique(nodes);
 
@@ -344,7 +344,7 @@ classdef Surface < matlab.mixin.SetGet
 			end
 
 			% If it passes this test, then I'm almost certain the edges are
-			% correctly formed for a surface. Then we just need to collate
+			% correctly formed for a face. Then we just need to collate
 			% the edges and nodes correctly in the local index system
 
 			obj.Edge1 = e1;
@@ -384,13 +384,13 @@ classdef Surface < matlab.mixin.SetGet
 
 			obj.nodeList = [obj.Node1,obj.Node2,obj.Node3];
 
-			obj.Edge1.AddSurface(obj);
-			obj.Edge2.AddSurface(obj);
-			obj.Edge3.AddSurface(obj);
+			obj.Edge1.AddFace(obj);
+			obj.Edge2.AddFace(obj);
+			obj.Edge3.AddFace(obj);
 
-			obj.Node1.AddSurface(obj);
-			obj.Node2.AddSurface(obj);
-			obj.Node3.AddSurface(obj);
+			obj.Node1.AddFace(obj);
+			obj.Node2.AddFace(obj);
+			obj.Node3.AddFace(obj);
 
 		end
 

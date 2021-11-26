@@ -15,6 +15,8 @@ classdef Edge < matlab.mixin.SetGet
 		Node1
 		Node2
 
+		naturalLength
+
 		% Used only when an edge is modified during cell
 		% division. Keep track of the old node to help with
 		% adjusting the edge boxes
@@ -24,7 +26,7 @@ classdef Edge < matlab.mixin.SetGet
 		modifiedInDivision = false
 
 		nodeList = []
-		surfList = []
+		faceList = []
 		cellList = []
 
 		torque = [0,0,0]
@@ -44,26 +46,8 @@ classdef Edge < matlab.mixin.SetGet
 			% All the initilising
 			% An edge will always have a pair of nodes
 
-			% This ordering is important, because it defines the
-			% orientation of the edge. If the edge is 
-			% completely free in space, then the orientation is
-			% arbitrary, but as soon as it is part of a cell or membrane
-			% then 1 to 2 must be chosen
-			% so that if u = (Node2.position - Node1.position) / length,
-			% then the unit vector v = [u(2), -u(1)] points out of the tissue.
-			% Then, v will point to the right if forward is 1 to 2.
-			% Due to the choice of v, travelling 1 to 2 will go
-			% anticlockwise around the perimeter of the cell 
-
-			% Note: v should be perpendicular, but I can't do that in ASCII art
-			%        2 o
-			%         /
-			%        /
-			%       /\
-			%      /  \v
-			%    u/    \
-			%    /      
-			% 1 o
+			% The ordering of the nodes can be important
+			% when trying to determine orientation
 
 			obj.Node1 = Node1;
 			obj.Node2 = Node2;
@@ -95,8 +79,8 @@ classdef Edge < matlab.mixin.SetGet
 		function ID = GetMomentOfDrag(obj)
 			% The length of the edge will change at every time
 			% step, so ID needs to be calculated every time
-			r1 = obj.Node1.position;
-			r2 = obj.Node2.position;
+			r1 = obj.Node1.pos;
+			r2 = obj.Node2.pos;
 
 			% Centre of drag
 			rD = (obj.Node1.eta * r1 + obj.Node2.eta * r2) / obj.etaD;
@@ -110,29 +94,30 @@ classdef Edge < matlab.mixin.SetGet
 
 		function len = GetLength(obj)
 			
-			len = norm(obj.Node1.position - obj.Node2.position);
+			len = norm(obj.Node1.pos - obj.Node2.pos);
 
 		end
 
 		function direction1to2 = GetUnitVector1to2(obj)
 			
-			direction1to2 = obj.Node2.position - obj.Node1.position;
+			direction1to2 = obj.Node2.pos - obj.Node1.pos;
 			direction1to2 = direction1to2 / norm(direction1to2);
 
 		end
 
-		function outward = GetOutwardUnitNormal(obj)
-			% See constructor for discussion about why this is the outward
-			% normal
-			u = obj.GetVector1to2();
-			outward = [u(2), -u(1)];
+		% This doesn't make sense in 3D
+		% function outward = GetOutwardUnitNormal(obj)
+		% 	% See constructor for discussion about why this is the outward
+		% 	% normal
+		% 	u = obj.GetVector1to2();
+		% 	outward = [u(2), -u(1)];
 
-		end
+		% end
 
 		function midPoint = GetMidPoint(obj)
 
-			direction1to2 = obj.Node2.position - obj.Node1.position;
-			midPoint = obj.Node1.position + 0.5 * direction1to2;
+			direction1to2 = obj.Node2.pos - obj.Node1.pos;
+			midPoint = obj.Node1.pos + 0.5 * direction1to2;
 
 		end
 
@@ -264,44 +249,44 @@ classdef Edge < matlab.mixin.SetGet
 		end
 
 
-		function AddSurface(obj, s)
+		function AddFace(obj, s)
 
 			% s can be a vector
-			if sum( ismember(s,obj.surfList)) ~=0
-				warning('E:AddSurf:SurfAlreadyHere', 'Adding at least one surf that already appears in surfList for Edge %d. This has not been added.', obj.id);
-				s(ismember(s,obj.surfList)) = [];
+			if sum( ismember(s,obj.faceList)) ~=0
+				warning('E:AddFace:FaceAlreadyHere', 'Adding at least one surf that already appears in faceList for Edge %d. This has not been added.', obj.id);
+				s(ismember(s,obj.faceList)) = [];
 			end
-			obj.surfList = [obj.surfList , s];
+			obj.faceList = [obj.faceList , s];
 
 		end
 
-		function ReplaceSurf(obj, oldS, newS)
+		function ReplaceFace(obj, oldS, newS)
 
 			% Currently the surf list has at most two entries
 			if oldS == newS
-				warning('E:ReplaceSurf:SameSurf','Both surfaces are the same, nothing will happen')
+				warning('E:ReplaceFace:SameFace','Both surfaces are the same, nothing will happen')
 			else
 
-				obj.AddSurf(newS);
-				obj.RemoveSurf(oldS);
+				obj.AddFace(newS);
+				obj.RemoveFace(oldS);
 
 			end
 
 		end
 
-		function ReplaceSurfList(obj, surfList)
+		function ReplaceFaceList(obj, faceList)
 
-			obj.surfList = surfList;
+			obj.faceList = faceList;
 			
 		end
 
-		function RemoveSurf(obj, s)
+		function RemoveFace(obj, s)
 
 			% Remove the surf from the list
-			if sum(obj.surfList == s) == 0
-				warning('E:RemoveSurf:SurfNotHere', 'At least one surface does not appear in edgeList for Edge %d', obj.id);
+			if sum(obj.faceList == s) == 0
+				warning('E:RemoveFace:FaceNotHere', 'At least one surface does not appear in edgeList for Edge %d', obj.id);
 			else
-				obj.surfList(obj.surfList == s) = [];
+				obj.faceList(obj.faceList == s) = [];
 			end
 
 		end

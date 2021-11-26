@@ -1,4 +1,4 @@
-classdef BruteForceNodeSurface < AbstractTissueBasedForce
+classdef BruteForceNodeFace < AbstractTissueBasedForce
 	% This adds a constant force to each NodeCell in the simulation
 	% that points radially form a point.
 	% force is a scalar magnitude - positive means it pushes away from
@@ -19,7 +19,7 @@ classdef BruteForceNodeSurface < AbstractTissueBasedForce
 	methods
 
 
-		function obj = BruteForceNodeSurface(springRate, dAsym, dSep, dLim)
+		function obj = BruteForceNodeFace(springRate, dAsym, dSep, dLim)
 
 			obj.springRate 	= springRate; 	% Spring force parameter
 			obj.dAsym 		= dAsym;		% Repulsion asymptotes to inf
@@ -29,21 +29,25 @@ classdef BruteForceNodeSurface < AbstractTissueBasedForce
 
 		end
 
-		function AddTissueBasedForces(obj, tissue)
+		function AddTissueBasedForces(obj, t)
 
-			for i = 1:length(tissue.nodeList)
+			for i = 1:length(t.cellList)
 				
-				n = tissue.nodeList(i);
-				
-				for j = 1:length(tissue.surfList)
+				c = t.cellList(i);
 
-					s = tissue.surfList(j);
+				if isa(c, 'NodeCell')
+					
+					n = c.nodeList;
 
-					if ~ismember(n, s.nodeList)
-						% Only applies force when close enough
-						obj.ApplyForce(n,s);
+					fNeighbours = n.GetData('faceNeighbours', t);
+					
+					for j = 1:length(fNeighbours)
+
+						f = fNeighbours(j);
+
+						obj.ApplyForce(n,f);
+
 					end
-
 				end
 			end
 
@@ -64,12 +68,22 @@ classdef BruteForceNodeSurface < AbstractTissueBasedForce
 			% Project it onto the surface normal
 			un = s.GetUnitNormal();
 
+			% This force calculator is being used for the Tumour3D model
+			% at this point, and since the SphereShell
+			% has the face normals oriented outwards, the signed position
+			% should be negative unless the node is outside the cell
+
+			% This means we need to calculated the force based on -ve position
+			% being the correct place. The easiest way to do this is to flip the normal
+
+			un = -un;
+
 			d = dot(n1ton, un);
 
 			% This will tell us the distance of the node from the surface, signed
-			% according to which side it is on
+			% according to which side it is on, where +ve is now inside
 
-			if abs(d) < obj.dLim
+			if d < obj.dLim
 
 				% If it is close enough to the plane of the surface,
 				% then we need to decide if it is within the boundaries of
@@ -103,33 +117,30 @@ classdef BruteForceNodeSurface < AbstractTissueBasedForce
 
 				if in
 
-					% Calculate the force, and apply torques
-					f = obj.ForceLaw(abs(d));
+					% To prevent attraction between nodes and
+					% faces of the same cell, only do the next bit
+					% if d is less than dSep
 
-					force = f * un * sign(d);
+					if s.cellList ~= n.cellList || d < obj.dSep
+						% Calculate the force, and apply torques
+						f = obj.ForceLaw(d);
 
-					% Apply the force to the surface at point A
-					s.ApplyForce(-force, A);
+						force = f * un * sign(d);
 
-					% Apply the force to the interacting node
+						% Apply the force to the surface at point A
+						s.ApplyForce(-force, A);
 
-					n.ApplyForce(force);
+						% Apply the force to the interacting node
 
+						n.ApplyForce(force);
+
+					end
 
 				end
 
 			end
 
 		end
-
-		function InProximity(obj, n, s)
-
-			% Tests if the given node is within the  ounding region
-			% of the surface
-
-
-		end
-
 
 		function Fa = ForceLaw(obj, x)
 

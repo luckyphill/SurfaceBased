@@ -1,4 +1,4 @@
-classdef  SingleSurface < AbstractSimulation
+classdef  SingleFace < AbstractSimulation
 
 
 	properties
@@ -11,7 +11,7 @@ classdef  SingleSurface < AbstractSimulation
 	methods
 
 
-		function obj = SingleSurface()
+		function obj = SingleFace()
 
 
 			obj.stochasticJiggle = false;
@@ -25,18 +25,18 @@ classdef  SingleSurface < AbstractSimulation
 			e1 = Edge(n1,n2);
 			e2 = Edge(n2,n3);
 			e3 = Edge(n3,n1);
-			s = Surface(e1,e2,e3);
+			s = Face(e1,e2,e3);
 
 			obj.AddNodesToSimulation([n,n1,n2,n3]);
 			obj.AddEdgesToSimulation([e1,e2,e3]);
-			obj.AddSurfacesToSimulation(s);
+			obj.AddFacesToSimulation(s);
 
 			springRate = 1;
 			dAsym = 0;
 			dSep = 1;
 			dLim = 2;
 
-			b = BruteForceNodeSurface(springRate, dAsym, dSep, dLim);
+			b = BruteForceNodeFace(springRate, dAsym, dSep, dLim);
 
 			obj.AddTissueBasedForce(b);
 

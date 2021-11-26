@@ -1,4 +1,4 @@
-classdef  JoinedSurfaces < AbstractSimulation
+classdef  JoinedFaces < AbstractSimulation
 
 
 	properties
@@ -11,7 +11,7 @@ classdef  JoinedSurfaces < AbstractSimulation
 	methods
 
 
-		function obj = JoinedSurfaces()
+		function obj = JoinedFaces()
 
 
 			obj.stochasticJiggle = false;
@@ -30,20 +30,20 @@ classdef  JoinedSurfaces < AbstractSimulation
 			e5 = Edge(n4,n3);
 			e6 = Edge(n4,n2);
 
-			s1 = Surface(e1,e2,e3);
-			s2 = Surface(e3,e4,e5);
-			s3 = Surface(e2,e5,e6);
+			s1 = Face(e1,e2,e3);
+			s2 = Face(e3,e4,e5);
+			s3 = Face(e2,e5,e6);
 
 			obj.AddNodesToSimulation([n,n1,n2,n3,n4]);
 			obj.AddEdgesToSimulation([e1,e2,e3,e4,e5,e6]);
-			obj.AddSurfacesToSimulation([s1,s2]);
+			obj.AddFacesToSimulation([s1,s2]);
 
 			springRate = 1;
 			dAsym = 0;
 			dSep = 1;
 			dLim = 2;
 
-			b = BruteForceNodeSurface(springRate, dAsym, dSep, dLim);
+			b = BruteForceNodeFace(springRate, dAsym, dSep, dLim);
 
 			obj.AddTissueBasedForce(b);
 

@@ -1,4 +1,4 @@
-classdef TestSurface < matlab.unittest.TestCase
+classdef TestFace < matlab.unittest.TestCase
 
 	% All of these tests will be for AbstractCellSimulation,
 	% but they will be done using CellGrowing
@@ -15,7 +15,7 @@ classdef TestSurface < matlab.unittest.TestCase
 			e1 = Edge(n1,n2);
 			e2 = Edge(n2,n3);
 			e3 = Edge(n3,n1);
-			s = Surface(e1,e2,e3);
+			s = Face(e1,e2,e3);
 
 			n1.eta = 1;
 			n2.eta = 1;
@@ -96,7 +96,7 @@ classdef TestSurface < matlab.unittest.TestCase
 			e1 = Edge(n1,n2);
 			e2 = Edge(n2,n3);
 			e3 = Edge(n3,n1);
-			s = Surface(e1,e2,e3);
+			s = Face(e1,e2,e3);
 
 			u = s.GetUnitNormal();
 			A = [1.1,2.2,3];

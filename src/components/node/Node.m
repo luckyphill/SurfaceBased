@@ -20,7 +20,7 @@ classdef Node < matlab.mixin.SetGet
 		% This will be circular - each edge will have two nodes
 		% each node can be part of multiple edges, similarly for cells
 		edgeList = []
-		surfList = []
+		faceList = []
 		cellList = []
 
 		% Each node stores it's local drag coefficient, so we can distinguish
@@ -29,6 +29,8 @@ classdef Node < matlab.mixin.SetGet
 
 		nodeAdjusted = false;
 		preAdjustedPosition = [];
+
+		nodeData
 
 	end
 
@@ -45,11 +47,39 @@ classdef Node < matlab.mixin.SetGet
 
 			obj.prevPos = [x,y,z];
 
+			obj.AddNodeData(NodeNeighbours(1.5, 10));
+			obj.AddNodeData(FaceNeighbours(0.6, 10));
+
 		end
 
 		function delete(obj)
 
 			clear obj;
+
+		end
+
+		function AddNodeData(obj, d)
+
+			% Need to explicitly create a map object or matlab
+			% will only point to one map object for the
+			% entire list of Nodes...
+			if isempty(obj.nodeData)
+				nD = containers.Map;
+				for i = 1:length(d)
+					nD(d(i).name) = d(i);
+				end
+				obj.nodeData = nD;
+			else
+				for i = 1:length(d)
+					obj.nodeData(d(i).name) = d(i);
+				end
+			end
+
+		end
+
+		function data = GetData(obj, name, t)
+
+			data = obj.nodeData(name).GetData(obj, t);
 
 		end
 
@@ -119,35 +149,35 @@ classdef Node < matlab.mixin.SetGet
 
 		end
 
-		function AddSurface(obj, s)
+		function AddFace(obj, f)
 
 			% c can be a vector
-			if sum( ismember(s,obj.surfList)) ~=0
-				warning('N:AddSurf:SurfAlreadyHere', 'Adding at least one surf that already appears in surfList for Node %d. This has not been added.', obj.id);
-				s(ismember(s,obj.surfList)) = [];
+			if sum( ismember(f,obj.faceList)) ~=0
+				warning('N:AddFace:FaceAlreadyHere', 'Adding at least one face that already appears in faceList for Node %d. This has not been added.', obj.id);
+				f(ismember(f,obj.faceList)) = [];
 			end
-			obj.surfList = [obj.surfList , s];
+			obj.faceList = [obj.faceList , f];
 
 		end
 
-		function RemoveSurface(obj, s)
+		function RemoveFace(obj, f)
 
-			% Remove the surf from the list
-			if sum(obj.surfList == s) == 0
-				warning('N:RemoveSurf:SurfNotHere', 'At least one surf does not appear in nodeList for Node %d', obj.id);
+			% Remove the face from the list
+			if sum(obj.faceList == f) == 0
+				warning('N:RemoveFace:FaceNotHere', 'At least one face does not appear in nodeList for Node %d', obj.id);
 			else
-				obj.surfList(obj.surfList == s) = [];
+				obj.faceList(obj.faceList == f) = [];
 			end
 
 		end
 
-		function ReplaceSurfList(obj, sList)
+		function ReplaceFaceList(obj, fList)
 
-			% Used for SurfFree to overwrite the existing surf
-			% Does not modify any links in the surf, it assumes
+			% Used for FaceFree to overwrite the existing face
+			% Does not modify any links in the face, it assumes
 			% they are handled in the division or creation process
 
-			obj.surfList = sList;
+			obj.faceList = fList;
 
 		end
 

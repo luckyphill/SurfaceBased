@@ -5,7 +5,7 @@ classdef AbstractCellCycleModel < matlab.mixin.SetGet
 
 		age
 
-		% colourSet = ColourSet();
+		colourSet = ColourSet();
 
 		colour = 1;
 
@@ -46,7 +46,7 @@ classdef AbstractCellCycleModel < matlab.mixin.SetGet
 
 		function colour = GetColour(obj)
 
-			colour = obj.colour;%obj.colourSet.GetRGB(obj.colour);
+			colour = obj.colourSet.GetRGB(obj.colour);
 
 		end
 

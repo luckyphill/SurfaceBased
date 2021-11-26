@@ -9,7 +9,7 @@ classdef AbstractCell < handle & matlab.mixin.Heterogeneous
 
 		nodeList = Node.empty()
 		edgeList = Edge.empty()
-		surfList = Surface.empty()
+		faceList = Face.empty()
 
 		CellCycleModel
 
@@ -41,7 +41,7 @@ classdef AbstractCell < handle & matlab.mixin.Heterogeneous
 		% Must implement a divide method that returns a new cell
 		% and a structure containing the new components and the
 		% components that need to be removed
-		[newCell, components] = Divide(obj)
+		[newCellList, newNodeList, newEdgeList] = Divide(obj)
 		
 		% inside = IsPointInsideCell(obj, point) % I don't think this needs to be abstract
 

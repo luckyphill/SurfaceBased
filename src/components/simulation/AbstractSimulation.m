@@ -1,6 +1,6 @@
 classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 	% A parent class that contains all the functions for running a simulation
-	% The child/concrete class will only need a constructor that assembles the cells
+	% The child/concrete class will only need a constructor that assembles the cells etc.
 
 	properties
 
@@ -16,8 +16,8 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 		edgeList
 		nextEdgeId = 1
 
-		surfList
-		nextSurfId = 1
+		faceList
+		nextFaceId = 1
 
 		cellList
 		nextCellId = 1
@@ -25,9 +25,9 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 		stochasticJiggle = true
 		epsilon = 0.0001; % The size of the jiggle force
 
-		% cellBasedForces AbstractCellBasedForce
-		% edgeBasedForces AbstractEdgeBasedForce
-		% surfBasedForces AbstractSurfBasedForce
+		cellBasedForces AbstractCellBasedForce
+		edgeBasedForces AbstractEdgeBasedForce
+		% faceBasedForces AbstractFaceBasedForce
 		% neighbourhoodBasedForces AbstractNeighbourhoodBasedForce
 		tissueBasedForces AbstractTissueBasedForce
 
@@ -44,7 +44,7 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 		% with also the potential to write to file
 		% dataStores AbstractDataStore
 
-		% dataWriters AbstractDataWriter
+		dataWriters AbstractDataWriter
 
 		% A collection objects for calculating data about the simulation
 		% stored in a map container so each type of data can be given a
@@ -75,6 +75,7 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 
 			% Need to implement these properly
 			% obj.Expansion();
+			obj.MakeCellsDivide();
 
 			% obj.Contraction();
 
@@ -83,7 +84,7 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 
 			obj.AdvanceAge();
 
-			% obj.CollateData();
+			obj.CollateData();
 
 			% if obj.IsStoppingConditionMet()
 			% 	obj.stopped = true;
@@ -125,9 +126,9 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 
 			% Function related to movement
 
-			% obj.GenerateEdgeBasedForces();
-			% obj.GenerateSurfaceBasedForces();
-			% obj.GenerateCellBasedForces();
+			obj.GenerateEdgeBasedForces();
+			% obj.GenerateFaceBasedForces();
+			obj.GenerateCellBasedForces();
 			obj.GenerateTissueBasedForces();
 
 			% if obj.usingPartition
@@ -220,12 +221,16 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 			% 	obj.tissueList(i).AdvanceAge(obj.dt);
 			% end
 
+			for i = 1:length(obj.cellList)
+				obj.cellList(i).AgeCell(obj.dt);
+			end
+
 		end
 
 		function CollateData(obj)
 
 			% All the processing to track and write data
-			obj.StoreData();
+			% obj.StoreData();
 			
 			if obj.writeToFile
 				obj.WriteData();
@@ -271,18 +276,18 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 
 		function ConvertTorquesToForcesLocal(obj)
 
-			% Loop through the edges and surfaces and
+			% Loop through the edges and faces and
 			% convert the torques to equivalent forces
 
-			for i = 1:length(obj.surfList)
+			for i = 1:length(obj.faceList)
 
-				% For each surface, use the rigid body properties to
+				% For each face, use the rigid body properties to
 				% find the equivalent force that can be applied to the
 				% nodes around the boundary
 
-				% Transform the torque into the coordinate system of the surface
+				% Transform the torque into the coordinate system of the face
 
-				s = obj.surfList(i);
+				s = obj.faceList(i);
 
 				t = s.torque;
 
@@ -291,7 +296,7 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 				tD = [dot(u,t),dot(v,t),0];
 
 				if abs(dot(w,t)) > 1e-6
-					error('Torque about the surface normal should be zero at this point')
+					error('Torque about the face normal should be zero at this point')
 				end
 
 				[IDx,IDy,IDxy,IDz] = s.GetDragMatrixLocal();
@@ -371,15 +376,15 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 			% in the global axis, not the local one
 
 
-			for i = 1:length(obj.surfList)
+			for i = 1:length(obj.faceList)
 
-				% For each surface, use the rigid body properties to
+				% For each face, use the rigid body properties to
 				% find the equivalent force that can be applied to the
 				% nodes around the boundary
 
-				% Transform the torque into the coordinate system of the surface
+				% Transform the torque into the coordinate system of the face
 
-				s = obj.surfList(i);
+				s = obj.faceList(i);
 
 				t = s.torque;
 
@@ -503,7 +508,7 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 
 			% Call the divide process, and update the lists
 			newCells 	= AbstractCell.empty();
-			newEdges = Edge.empty();
+			newEdges 	= Edge.empty();
 			newNodes 	= Node.empty();
 			for i = 1:length(obj.cellList)
 				c = obj.cellList(i);
@@ -638,12 +643,12 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 
 		end
 
-		function AddSurfaceBasedForce(obj, f)
+		function AddFaceBasedForce(obj, f)
 
-			if isempty(obj.surfaceBasedForces)
-				obj.surfaceBasedForces = f;
+			if isempty(obj.faceBasedForces)
+				obj.faceBasedForces = f;
 			else
-				obj.surfaceBasedForces(end + 1) = f;
+				obj.faceBasedForces(end + 1) = f;
 			end
 
 		end
@@ -871,17 +876,30 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 			h = figure();
 			hold on
 
+			r = 0.25;
+			% Unit sphere coords
+			[usX,usY,usZ] = sphere(100);
+			
 			% Intitialise the vector
 			patchObjects(1) = fill([1,1],[2,2],'r');
+			surfObjects(1)  = surf(usX,usY,nan(size(usZ)));
 
-			for i = 1:length(obj.surfList)
-				s = obj.surfList(i);
+			for i = 1:length(obj.faceList)
+				s = obj.faceList(i);
 
 				x = [s.nodeList.x];
 				y = [s.nodeList.y];
 				z = [s.nodeList.z];	
 
-				patchObjects(i) = patch(x,y,z,[.5,.5,.5]);
+				patchObjects(i) = patch(x,y,z, [.5,.5,.5], 'FaceAlpha', 0.5, 'EdgeColor', [.5,.5,.5]);
+			end
+
+			for i = 1:length(obj.cellList)
+				c = obj.cellList(i);
+				if isa(c, 'NodeCell')
+					n = c.nodeList;
+					surfObjects(i) = surf(r*usX + n.x,r*usY + n.y, r* usZ + n.z, 'LineStyle', 'none', 'FaceColor', c.GetColour());
+				end
 			end
 
 			axis equal
@@ -913,23 +931,32 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 				zlim(xyrange(5:6));
 			end
 
+			r = 0.25;
+			% Unit sphere coords
+			[usX,usY,usZ] = sphere(100);
+			
+			% Intitialise the vector
 			patchObjects(1) = fill([1,1],[2,2],'r');
-			lineObjects(1)  = line(nan,nan,nan,'Marker', 'o','MarkerSize',12);
+			surfObjects(1)  = surf(usX,usY,nan(size(usZ)));
 
-			for i = 1:length(obj.surfList)
-				s = obj.surfList(i);
+			ax = gca;
+
+			for i = 1:length(obj.faceList)
+				s = obj.faceList(i);
 
 				x = [s.nodeList.x];
 				y = [s.nodeList.y];
 				z = [s.nodeList.z];	
 
-				patchObjects(i) = patch(x,y,z,[.5,.5,.5]);
+				patchObjects(i) = patch(ax,x,y,z,[.5,.5,.5],'FaceAlpha', 0.5, 'EdgeColor', [.5,.5,.5]);
 			end
 
-			for i = 1:length(obj.nodeList)
-				n = obj.nodeList(i);
-
-				lineObjects(i) = line(n.x,n.y,n.z,'Marker', 'o','MarkerSize',12);
+			for i = 1:length(obj.cellList)
+				c = obj.cellList(i);
+				if isa(c, 'NodeCell')
+					n = c.nodeList;
+					surfObjects(i) = surf(ax,r*usX + n.x,r*usY + n.y, r* usZ + n.z, 'LineStyle', 'none', 'FaceColor', c.GetColour());
+				end
 			end
 
 			totalSteps = 0;
@@ -938,15 +965,15 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 				obj.NTimeSteps(sm);
 				totalSteps = totalSteps + sm;
 
-				for j = 1:length(obj.surfList)
-					s = obj.surfList(j);
+				for j = 1:length(obj.faceList)
+					s = obj.faceList(j);
 
 					x = [s.nodeList.x];
 					y = [s.nodeList.y];
 					z = [s.nodeList.z];	
 
 					if j > length(patchObjects)
-						patchObjects(j) = patch(x,y,z,[.5,.5,.5]);
+						patchObjects(j) = patch(ax,x,y,z,[.5,.5,.5],'FaceAlpha', 0.5, 'EdgeColor', [.5,.5,.5]);
 					else
 						patchObjects(j).XData = x;
 						patchObjects(j).YData = y;
@@ -955,32 +982,39 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 					end
 				end
 
-				for j = 1:length(obj.nodeList)
-					n = obj.nodeList(j);	
-
-					if j > length(lineObjects)
-						lineObjects(j) = line(n.x,n.y,n.z,'Marker', 'o','MarkerSize',12);
-					else
-						lineObjects(j).XData = n.x;
-						lineObjects(j).YData = n.y;
-						lineObjects(j).ZData = n.z;
-						% patchObjects(j).FaceColor = c.GetColour();
+				nNodeCells = 0;
+				J = 0;
+				for j = 1:length(obj.cellList)
+					c = obj.cellList(j);
+					if isa(c, 'NodeCell')
+						nNodeCells = nNodeCells + 1;
+						n = c.nodeList;	
+						J = J + 1;
+						if J > length(surfObjects)
+							surfObjects(J) = surf(ax,r*usX + n.x,r*usY + n.y, r* usZ + n.z, 'LineStyle', 'none', 'FaceColor', c.GetColour());
+						else
+							surfObjects(J).XData = r*usX + n.x;
+							surfObjects(J).YData = r*usY + n.y;
+							surfObjects(J).ZData = r*usZ + n.z;
+							surfObjects(J).FaceColor = c.GetColour();
+							surfObjects(J).LineStyle = 'none';
+						end
 					end
 				end
 
 				% Delete the line objects when there are too many
-				for j = length(patchObjects):-1:length(obj.surfList)+1
+				for j = length(patchObjects):-1:length(obj.faceList)+1
 					patchObjects(j).delete;
 					patchObjects(j) = [];
 				end
 
-				for j = length(lineObjects):-1:length(obj.nodeList)+1
-					lineObjects(j).delete;
-					lineObjects(j) = [];
+				for j = length(surfObjects):-1:nNodeCells+1
+					surfObjects(j).delete;
+					surfObjects(j) = [];
 				end
 
 				drawnow
-				title(sprintf('t=%g',obj.t),'Interpreter', 'latex');
+				title(ax,sprintf('t=%g',obj.t),'Interpreter', 'latex');
 
 				pause(0.1);
 
@@ -1016,14 +1050,14 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 
 		end
 
-		function AddSurfacesToSimulation(obj, listOfSurf)
+		function AddFacesToSimulation(obj, listOfFaces)
 			
-			for i = 1:length(listOfSurf)
-				% If any of the Surf are already in the list, don't add them
-				s = listOfSurf(i);
-				if sum(ismember(listOfSurf(i), obj.surfList)) == 0
-					s.id = obj.GetNextSurfId();
-					obj.surfList = [obj.surfList, s];
+			for i = 1:length(listOfFaces)
+				% If any of the Face are already in the list, don't add them
+				s = listOfFaces(i);
+				if sum(ismember(listOfFaces(i), obj.faceList)) == 0
+					s.id = obj.GetNextFaceId();
+					obj.faceList = [obj.faceList, s];
 				end
 
 			end
@@ -1063,10 +1097,10 @@ classdef (Abstract) AbstractSimulation < matlab.mixin.SetGet
 
 		end
 
-		function id = GetNextSurfId(obj)
+		function id = GetNextFaceId(obj)
 			
-			id = obj.nextSurfId;
-			obj.nextSurfId = obj.nextSurfId + 1;
+			id = obj.nextFaceId;
+			obj.nextFaceId = obj.nextFaceId + 1;
 
 		end
 

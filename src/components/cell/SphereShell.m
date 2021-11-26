@@ -1,7 +1,7 @@
 classdef SphereShell < AbstractCell
 	% A cell that is a thin shell unit sphere
 	% The mesh points are hard coded
-	% There are 58 nodes, 168 edges and  112 surfaces
+	% There are 58 nodes, 168 edges and  112 faceaces
 	% N-E+F = 2 According to Euler's formula, which holds here
 
 	properties
@@ -348,41 +348,101 @@ classdef SphereShell < AbstractCell
 		   113   112    73
 		    35   115   165];
 
+
+		centre
+
 	end
 
 	methods
 		
-		function obj = SphereShell(pos)
+		function obj = SphereShell(pos, varargin)
+
+			% pos: the location of the shell centre
+			% varargin contains a vector [radius, ...]
+			% radius: the radius of the shell
+
+			r = 1;
+			if ~isempty(varargin)
+				r = varargin{1};
+			end
+
+			obj.centre = pos;
 
 			obj.CellCycleModel = NoCellCycle();
-			
-			% pos is the centre of the cell, use that 
+			obj.CellCycleModel.colour = obj.CellCycleModel.colourSet.GetNumber('MEMBRANE');
 
-			obj.n(:,1) = obj.n(:,1) + pos(1);
-			obj.n(:,2) = obj.n(:,2) + pos(2);
-			obj.n(:,3) = obj.n(:,3) + pos(3);
+			obj.n(:,1) = r * obj.n(:,1) + pos(1);
+			obj.n(:,2) = r * obj.n(:,2) + pos(2);
+			obj.n(:,3) = r * obj.n(:,3) + pos(3);
 
 			for i = 1:length(obj.n)
-				obj.nodeList(end + 1) = Node(obj.n(i,1),obj.n(i,2),obj.n(i,3));
+				n = Node(obj.n(i,1),obj.n(i,2),obj.n(i,3));
+				n.AddCell(obj);
+				obj.nodeList(end + 1) = n;
 			end
 
 			for i = 1:length(obj.e)
 				ns = obj.nodeList(obj.e(i,:));
-				obj.edgeList(end + 1) = Edge(ns(1), ns(2));
+				e = Edge(ns(1), ns(2));
+				e.AddCell(obj);
+				obj.edgeList(end + 1) = e;
 			end
 
 			for i = 1:length(obj.f)
 				es = obj.edgeList(obj.f(i,:));
-				obj.surfList(end + 1) = Surface(es(1), es(2), es(3));
+				f = Face(es(1), es(2), es(3));
+				f.AddCell(obj);
+				obj.faceList(end + 1) = f;
 			end
+
+			obj.OrientFaceNormals();
+
+		end
+
+		function OrientFaceNormals(obj)
+
+			% Need to make sure the face normals all point
+			% outwards from the shell. To do this, use the centre
+			% of the shell and point a vector from centre to a point
+			% on the face. If the dot product is negative, swap the order
+			% of Node2 and Node3 in the face, as these are used to
+			% calculate the surface normal on the fly
+
+
+			for i = 1:length(obj.faceList)
+
+				f = obj.faceList(i);
+
+				u = f.GetUnitNormal();
+
+				ray = f.Node1.pos - obj.centre;
+
+				if dot(ray,u) < 0
+					% Unit normal is oriented the wrong way
+					% Need to swap the local order of the nodes
+					% to invert the normal
+					n1 = f.Node1;
+					n2 = f.Node3;
+					n3 = f.Node2;
+
+					f.Node2 = n2;
+					f.Node3 = n3;
+
+					f.nodeList = [n1,n2,n3];
+
+				end
+
+			end
+
 
 		end
 
 
-		function [newCell, components] = Divide(obj)
-			
-			components = [];
+		function [newCell, newNodes, newEdges] = Divide(obj)
+
 			newCell = AbstractCell.empty();
+			newNodes = Node.empty();
+			newEdges = Edge.empty();
 
 		end
 
