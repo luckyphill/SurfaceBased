@@ -68,6 +68,18 @@ classdef  Tumour3D < AbstractSimulation
 
 		end
 
+		function RunToConfluence(obj, t)
+
+			% This function runs the simulation until all cells are stopped
+			% by contact inhibition. The input t is the maximum time to simulate
+			% in case confluence is not reached
+
+			obj.AddStoppingCondition(ConfluentStoppingCondition());
+
+			obj.RunToTime(t);
+
+		end
+
 
 
 	end
