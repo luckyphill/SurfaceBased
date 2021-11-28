@@ -423,13 +423,13 @@ classdef Visualiser < matlab.mixin.SetGet
 			% Arg 1: [indexStart, indexEnd] - a vector of the start and ending indices
 			% Arg 2: plot axis range in the form [xmin,xmax,ymin,ymax]
 			
-			xyrange = [];
+			xyzrange = [];
 			indices = [];
 			videoFormat = 'MPEG-4';
 			if ~isempty(varargin)
 				indices = varargin{1};
 				if length(varargin) > 1
-					xyrange = varargin{2};
+					xyzrange = varargin{2};
 					if length(varargin) > 2
 						videoFormat = varargin{3};
 					end
@@ -444,46 +444,63 @@ classdef Visualiser < matlab.mixin.SetGet
 			axis equal
 			axis off
 			hold on
+			ax = gca;
 
 			F = getframe(h);
 			
-			if ~isempty(xyrange)
-				xlim(xyrange(1:2));
-				ylim(xyrange(3:4));
+			if ~isempty(xyzrange)
+				xlim(xyzrange(1:2));
+				ylim(xyzrange(3:4));
+				zlim(xyzrange(5:6));
 			end
 
+			% A radius for node cells
+			r = 0.25;
+			% Unit sphere coords to plot node cells
+			[usX,usY,usZ] = sphere(100);
+			
+			% Intitialise the vectors
+			patchObjects(1) = patch(ax, 1,1,1, [1,1,1], 'FaceAlpha', 0.5, 'EdgeColor', [.5,.5,.5]);
+			surfObjects(1)  = surf(usX,usY,nan(size(usZ)));
+
+
+			% Extract the start and end points
+			[I,~] = size(obj.cells);
+			startI =  1;
+			endI = I;
 			if ~isempty(indices)
-				tIdxStart = indices(1);
-				tIdxEnd = indices(2);
-			else
-				tIdxStart = 1;
-				tIdxEnd = length(obj.timeSteps);
+				startI = indices(1);
+				endI = indices(2);
 			end
 
-			% Initialise the array with anything
-			fillObjects(1) = fill([1,1],[2,2],.5);
+			for i = startI:endI
 
-			for i = tIdxStart:tIdxEnd
-				% i is the time steps
-				[~,J] = size(obj.cells);
+				% Split this by updating nodeCells
+				% and faceCells
+
+
+				% Loop through the node cells
+				[~,J] = size(obj.nodeCells);
 				j = 1;
-				while j <= J && ~isempty(obj.cells{i,j})
+				while j <= J && ~isempty(obj.nodeCells{i,j})
 
-					c = obj.cells{i,j};
+					c = obj.nodeCells{i,j};
 					ids = c(1:end-1);
 					colour = c(end);
 					nodeCoords = squeeze(obj.nodes(ids,i,:));
 
-					x = nodeCoords(:,1);
-					y = nodeCoords(:,2);
-					A = polyarea(x,y);
-				
-					if j > length(fillObjects)
-						fillObjects(j) = fill(x,y,obj.cs.GetRGB(colour));
+					x = nodeCoords(1) + r*usX;
+					y = nodeCoords(2) + r*usY;
+					z = nodeCoords(3) + r*usZ;
+
+					if j > length(surfObjects)
+						surfObjects(j) = surf(ax, x, y, z, 'LineStyle', 'none', 'FaceColor', obj.cs.GetRGB(colour));
 					else
-						fillObjects(j).XData = x;
-						fillObjects(j).YData = y;
-						fillObjects(j).FaceColor = obj.cs.GetRGB(colour);
+						surfObjects(j).XData = x;
+						surfObjects(j).YData = y;
+						surfObjects(j).ZData = z;
+						surfObjects(j).FaceColor = obj.cs.GetRGB(colour);
+						surfObjects(j).LineStyle = 'none';
 					end
 
 					j = j + 1;
@@ -491,12 +508,46 @@ classdef Visualiser < matlab.mixin.SetGet
 				end
 				% j will always end up being 1 more than the total number of non empty cells
 
-				for k = length(fillObjects):-1:j
-					fillObjects(k).delete;
-					fillObjects(k) = [];
+				for k = length(surfObjects):-1:j
+					surfObjects(k).delete;
+					surfObjects(k) = [];
 				end
 
-				drawnow
+
+
+				% This is a cheat way to get animations working with Tumour3D
+				% all faces are displayed the same, and the number of faces never changes
+				% Loop through the face cells
+
+				[~,J,~] = size(obj.faces);
+				for j = 1:J
+
+					nIDs = obj.faces(i,j,:);
+					colour = 11;
+					nodeCoords = squeeze(obj.nodes(nIDs,i,:));
+
+					x = nodeCoords(:,1);
+					y = nodeCoords(:,2);
+					z = nodeCoords(:,3);
+
+					if j > length(patchObjects)
+						patchObjects(j) = patch(ax, x, y, z, obj.cs.GetRGB(colour), 'FaceAlpha', 0.5, 'EdgeColor', [.5,.5,.5]);
+					else
+						patchObjects(j).XData = x;
+						patchObjects(j).YData = y;
+						patchObjects(j).ZData = z;
+						patchObjects(j).FaceColor = obj.cs.GetRGB(colour);
+					end
+
+					j = j + 1;
+
+				end
+				% j will always end up being 1 more than the total number of non empty cells
+
+				for k = length(patchObjects):-1:j
+					patchObjects(k).delete;
+					patchObjects(k) = [];
+				end
 
 				title(sprintf('t = %g',obj.timeSteps(i)),'Interpreter', 'latex');
 				F(end+1) = getframe(h);
