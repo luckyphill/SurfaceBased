@@ -31,8 +31,8 @@ do
 done < QuickTumourCheck.txt
 
 if [ $found = 1 ]; then
-	echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath([pwd,'/src']));addpath(genpath([pwd,'/HPC']));addpath(genpath([pwd,'/analysis'])); t = Tumour3D($a, $b, $c, $d, $e, $f, $g, $h); t.RunToConfluence(40, 200); quit()"
-	matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath([pwd,'/src']));addpath(genpath([pwd,'/HPC']));addpath(genpath([pwd,'/analysis'])); t = Tumour3D($a, $b, $c, $d, $e, $f, $g, $h); t.RunToConfluence(40, 200); quit()" 
+	echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath([pwd,'/src']));addpath(genpath([pwd,'/HPC']));addpath(genpath([pwd,'/analysis'])); t = Tumour3D($a, $b, $c, $d, $e, $f, $g, $h); t.RunToConfluence(40, 200); v = Visualiser(t); v.ProduceMovie([],[],'Motion JPEG AVI'); quit()"
+	matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath([pwd,'/src']));addpath(genpath([pwd,'/HPC']));addpath(genpath([pwd,'/analysis'])); t = Tumour3D($a, $b, $c, $d, $e, $f, $g, $h); t.RunToConfluence(40, 200); v = Visualiser(t); v.ProduceMovie([],[],'Motion JPEG AVI'); quit()" 
 else 
   echo "SLURM_ARRAY_TASK_ID $SLURM_ARRAY_TASK_ID is outside range of input file" 
 fi
