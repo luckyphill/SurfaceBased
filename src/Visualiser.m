@@ -28,7 +28,7 @@ classdef Visualiser < matlab.mixin.SetGet
 			% OR
 			% the simulation object handle
 
-			if isa(v, 'AbstractCellSimulation')
+			if isa(v, 'AbstractSimulation')
 				
 				obj.pathToSpatialState = v.dataWriters(1).fullPath;
 				rootDir = v.dataWriters(1).rootStorageLocation;
