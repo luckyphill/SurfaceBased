@@ -31,8 +31,8 @@ do
 done < QuickTumourCheck.txt
 
 if [ $found = 1 ]; then
-	echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath(pwd)); t = Tumour3D($a, $b, $c, $d, $e, $f, $g, $h); v = Visualiser(t); v.ProduceMovie(); quit()"
-	matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath(pwd)); t = Tumour3D($a, $b, $c, $d, $e, $f, $g, $h); v = Visualiser(t); v.ProduceMovie(); quit()" 
+	echo "matlab -nodisplay -nodesktop -r cd ../../; addpath(genpath(pwd)); t = Tumour3D($a, $b, $c, $d, $e, $f, $g, $h); v = Visualiser(t); v.ProduceMovie([],[],'Motion JPEG AVI'); quit()"
+	matlab -nodisplay -nodesktop -r "cd ../../; addpath(genpath(pwd)); t = Tumour3D($a, $b, $c, $d, $e, $f, $g, $h); v = Visualiser(t); v.ProduceMovie([],[],'Motion JPEG AVI'); quit()" 
 else 
   echo "SLURM_ARRAY_TASK_ID $SLURM_ARRAY_TASK_ID is outside range of input file" 
 fi
