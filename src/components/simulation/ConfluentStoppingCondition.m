@@ -6,13 +6,18 @@ classdef ConfluentStoppingCondition < AbstractStoppingCondition
 
 		name = 'Confluent'
 
+		minimumTime = 0
+
 	end
 
 	methods
 
-		function obj = ConfluentStoppingCondition()
+		function obj = ConfluentStoppingCondition(varargin)
 
 			% No special initialisation
+			if ~isempty(varargin)
+				obj.minimumTime = varargin{1};
+			end
 
 		end
 
@@ -20,19 +25,29 @@ classdef ConfluentStoppingCondition < AbstractStoppingCondition
 
 			stopped = true;
 
-			% Loop through the node cell population, and if any single cell is
-			% not in the stopped condition, then the simulation continues.
-			for i = 1:length(t.cellList)
-				c = t.cellList(i);
-				if isa(c, 'NodeCell')
 
-					if (c.CellCycleModel.colour ~= c.CellCycleModel.colourSet.GetNumber('STOPPED'))
-						stopped = false;
-						break;
+			if t.t > obj.minimumTime
+				% If the simulation has run for a minimum specified time,
+				% then it can only continue if all cells are not stopped
+
+				% Loop through the node cell population, and if any single cell is
+				% not in the stopped condition, then the simulation continues.
+				for i = 1:length(t.cellList)
+					c = t.cellList(i);
+					if isa(c, 'NodeCell')
+
+						if (c.CellCycleModel.colour ~= c.CellCycleModel.colourSet.GetNumber('STOPPED'))
+							stopped = false;
+							break;
+						end
+
 					end
 
 				end
 
+			else
+				% Otherwise we carry on until the minimum time is reached
+				stopped = false;
 			end
 
 		end
