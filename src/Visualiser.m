@@ -30,6 +30,10 @@ classdef Visualiser < matlab.mixin.SetGet
 
 			if isa(v, 'AbstractSimulation')
 				
+				% If the object is used purely to build the direcotry structure,
+				% then we need to make sure we build it first
+				% This won't have any bad effects if its already built
+				v.dataWriters(1).MakeFullPath();
 				obj.pathToSpatialState = v.dataWriters(1).fullPath;
 				rootDir = v.dataWriters(1).rootStorageLocation;
 
