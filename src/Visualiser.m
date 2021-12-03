@@ -296,7 +296,7 @@ classdef Visualiser < matlab.mixin.SetGet
 			% Arg 1: [indexStart, indexEnd] - a vector of the start and ending indices. Leave empty to run the whole simulation
 			% Arg 2: plot axis range in the form [xmin,xmax,ymin,ymax]
 
-			xyrange = [];
+			xyzrange = [];
 			indices = [];
 			if ~isempty(varargin)
 				indices = varargin{1};
@@ -309,7 +309,7 @@ classdef Visualiser < matlab.mixin.SetGet
 			axis equal
 			hold on
 			ax = gca;
-			if ~isempty(xyrange)
+			if ~isempty(xyzrange)
 				xlim(xyzrange(1:2));
 				ylim(xyzrange(3:4));
 				zlim(xyzrange(5:6));
@@ -557,6 +557,8 @@ classdef Visualiser < matlab.mixin.SetGet
 				title(sprintf('t = %g',obj.timeSteps(i)),'Interpreter', 'latex');
 				F(end+1) = getframe(h);
 
+				fprintf('Generated frame %d\n',length(F));
+
 			end
 
 			fileName = [obj.pathToOutput,'animation'];
@@ -586,6 +588,8 @@ classdef Visualiser < matlab.mixin.SetGet
 			% close the writer object
 			close(writerObj);
 
+			fprintf('Generation Complete\n');
+
 		end
 
 		function PlotTimeStep(obj, timeStep, varargin)
@@ -600,51 +604,100 @@ classdef Visualiser < matlab.mixin.SetGet
 
 			% if you want to ignore a particular input, use []
 
-			xyrange = [];
-			plotTitle = '';
-
+			xyzrange = [];
+			indices = [];
 			if ~isempty(varargin)
-				xyrange = varargin{1};
-				if length(varargin)>1
-					plotTitle = varargin{2};
+				indices = varargin{1};
+				if length(varargin) > 1
+					xyzrange = varargin{2};
 				end
 			end
 
 			h = figure();
 			axis equal
 			hold on
+			ax = gca;
+			if ~isempty(xyzrange)
+				xlim(xyzrange(1:2));
+				ylim(xyzrange(3:4));
+				zlim(xyzrange(5:6));
+			end
 
+			[I,~] = size(obj.cells);
+
+
+
+			% A radius for node cells
+			r = 0.25;
+			% Unit sphere coords to plot node cells
+			[usX,usY,usZ] = sphere(100);
+			
+			% Intitialise the vectors
+			patchObjects(1) = patch(ax, 1,1,1, [1,1,1], 'FaceAlpha', 0.5, 'EdgeColor', [.5,.5,.5]);
+			surfObjects(1)  = surf(usX,usY,nan(size(usZ)));
+
+			
 			i = timeStep;
 
 
-			% Initialise the array with anything
-			fillObjects(1) = fill([1,1],[2,2],'r');
-
-
-			[~,J] = size(obj.cells);
+			% Loop through the node cells
+			[~,J] = size(obj.nodeCells);
 			j = 1;
-			while j <= J && ~isempty(obj.cells{i,j})
+			while j <= J && ~isempty(obj.nodeCells{i,j})
 
-				c = obj.cells{i,j};
+				c = obj.nodeCells{i,j};
 				ids = c(1:end-1);
 				colour = c(end);
 				nodeCoords = squeeze(obj.nodes(ids,i,:));
 
-				x = nodeCoords(:,1);
-				y = nodeCoords(:,2);
-				
-				fillObjects(j) = fill(x,y,obj.cs.GetRGB(colour));
+				x = nodeCoords(1) + r*usX;
+				y = nodeCoords(2) + r*usY;
+				z = nodeCoords(3) + r*usZ;
 
+				if j > length(surfObjects)
+					surfObjects(j) = surf(ax, x, y, z, 'LineStyle', 'none', 'FaceColor', obj.cs.GetRGB(colour));
+				else
+					surfObjects(j).XData = x;
+					surfObjects(j).YData = y;
+					surfObjects(j).ZData = z;
+					surfObjects(j).FaceColor = obj.cs.GetRGB(colour);
+					surfObjects(j).LineStyle = 'none';
+				end
 
 				j = j + 1;
 
 			end
 
-			if ~isempty(xyrange)
-				xlim(xyrange(1:2));
-				ylim(xyrange(3:4));
+			[~,J,~] = size(obj.faces);
+			for j = 1:J
+
+				nIDs = obj.faces(i,j,:);
+				colour = 11;
+				nodeCoords = squeeze(obj.nodes(nIDs,i,:));
+
+				x = nodeCoords(:,1);
+				y = nodeCoords(:,2);
+				z = nodeCoords(:,3);
+
+				if j > length(patchObjects)
+					patchObjects(j) = patch(ax, x, y, z, obj.cs.GetRGB(colour), 'FaceAlpha', 0.5, 'EdgeColor', [.5,.5,.5]);
+				else
+					patchObjects(j).XData = x;
+					patchObjects(j).YData = y;
+					patchObjects(j).ZData = z;
+					patchObjects(j).FaceColor = obj.cs.GetRGB(colour);
+				end
+
+				j = j + 1;
+
 			end
-			
+			% j will always end up being 1 more than the total number of non empty cells
+
+			for k = length(patchObjects):-1:j
+				patchObjects(k).delete;
+				patchObjects(k) = [];
+			end
+
 			% j will always end up being 1 more than the total number of non empty cells
 			axis off
 			drawnow
