@@ -605,11 +605,11 @@ classdef Visualiser < matlab.mixin.SetGet
 			% if you want to ignore a particular input, use []
 
 			xyzrange = [];
-			indices = [];
+			plotTitle = '';
 			if ~isempty(varargin)
-				indices = varargin{1};
+				xyzrange = varargin{1};
 				if length(varargin) > 1
-					xyzrange = varargin{2};
+					plotTitle = varargin{2};
 				end
 			end
 
