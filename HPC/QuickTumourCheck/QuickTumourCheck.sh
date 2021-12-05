@@ -1,8 +1,8 @@
 #!/bin/bash 
 #SBATCH -p batch 
 #SBATCH -N 1 
-#SBATCH -n 1 
-#SBATCH --mem=4GB
+#SBATCH -n 4
+#SBATCH --mem=8GB
 #SBATCH --array=0-20
 #SBATCH --time=72:00:00
 # NOTIFICATIONS

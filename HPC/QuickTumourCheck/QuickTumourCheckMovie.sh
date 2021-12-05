@@ -1,10 +1,10 @@
 #!/bin/bash 
 #SBATCH -p batch 
 #SBATCH -N 1 
-#SBATCH -n 1 
-#SBATCH --mem=4GB
+#SBATCH -n 4
+#SBATCH --mem=8GB
 #SBATCH --array=0-20
-#SBATCH --time=10:00:00
+#SBATCH --time=24:00:00
 # NOTIFICATIONS
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=phillip.j.brown@adelaide.edu.au
