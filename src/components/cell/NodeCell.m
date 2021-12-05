@@ -76,6 +76,9 @@ classdef NodeCell < AbstractCell
 			end
 
 			newCell.AddCellData(cellDataArray);
+
+			newNode = newCell.nodeList;
+			newNode.NewUpdateFrequency(obj.nodeList.updateFrequency);
 		
 		end
 

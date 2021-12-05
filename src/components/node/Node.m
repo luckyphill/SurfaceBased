@@ -32,6 +32,10 @@ classdef Node < matlab.mixin.SetGet
 
 		nodeData
 
+		updateFrequency = 10;
+		nodeNeighbourhoodRadius = 1.5;
+		faceNeighbourhoodRadius = 0.6;
+
 	end
 
 	methods
@@ -47,8 +51,8 @@ classdef Node < matlab.mixin.SetGet
 
 			obj.prevPos = [x,y,z];
 
-			obj.AddNodeData(NodeNeighbours(1.5, 10));
-			obj.AddNodeData(FaceNeighbours(0.6, 10));
+			obj.AddNodeData(NodeNeighbours(obj.nodeNeighbourhoodRadius, obj.updateFrequency));
+			obj.AddNodeData(FaceNeighbours(obj.faceNeighbourhoodRadius, obj.updateFrequency));
 
 		end
 
@@ -226,6 +230,16 @@ classdef Node < matlab.mixin.SetGet
 				obj.edgeList(i).UpdateTotalDrag();
 
 			end
+
+		end
+
+		function NewUpdateFrequency(obj, updateFrequency)
+
+			% Changes the frequency that node neighbourhoods are recalculated
+			% updateFrequency is an integer giving the number of time steps to skip
+			obj.updateFrequency = updateFrequency;
+			obj.AddNodeData(NodeNeighbours(obj.nodeNeighbourhoodRadius, updateFrequency));
+			obj.AddNodeData(FaceNeighbours(obj.faceNeighbourhoodRadius, updateFrequency));
 
 		end
 
