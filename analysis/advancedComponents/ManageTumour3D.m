@@ -74,7 +74,7 @@ classdef ManageTumour3D < MatlabSimulation
 			remove(obj.simObj.simData,'spatialState');
 			obj.simObj.dataWriters = AbstractDataWriter.empty();
 
-			obj.outputTypes = {CellCountData, MembraneVolumeData};
+			obj.outputTypes = {CellCountData, MembraneVolumeData, VolumeByRadiusData};
 
 			obj.GenerateSaveLocation();
 
@@ -94,6 +94,11 @@ classdef ManageTumour3D < MatlabSimulation
 			if isnan(obj.data.membraneVolumeData)
 				obj.simObj.AddSimulationData(MembraneVolume());
 				obj.simObj.AddDataWriter(WriteMembraneVolume(20,obj.simObj.pathName));
+			end
+
+			if isnan(obj.data.volumeByRadiusData)
+				obj.simObj.AddSimulationData(VolumeByRadius());
+				obj.simObj.AddDataWriter(WriteVolumeByRadius(20,obj.simObj.pathName));
 			end
 
 		end
