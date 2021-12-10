@@ -84,8 +84,6 @@ classdef NodeCell < AbstractCell
 
 		function inside = IsPointInsideCell(obj, point)
 
-			% Assemble vertices in the correct order to produce a quadrilateral
-
 			inside = false;
 
 		end
