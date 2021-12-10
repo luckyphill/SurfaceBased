@@ -66,8 +66,15 @@ classdef ManageTumour3D < MatlabSimulation
 			obj.maximumTime = 200;
 
 			
-
 			obj.simObj = Tumour3D(radius, p, g, f, nns, nms, mep, seed);
+
+			obj.GenerateSaveLocation();
+
+			% Remove the default spatial state output
+			remove(obj.simObj.simData,'spatialState');
+			obj.simObj.dataWriters = AbstractDataWriter.empty();
+
+			obj.outputTypes = {CellCountData, MembraneVolumeData};
 
 			obj.GenerateSaveLocation();
 
@@ -77,6 +84,17 @@ classdef ManageTumour3D < MatlabSimulation
 			warning('off','sim:LoadFailure')
 			obj.LoadSimulationData();
 			warning('on','sim:LoadFailure')
+
+			% Only add the data types that are missing
+			if isnan(obj.data.cellCountData)
+				obj.simObj.AddSimulationData(NodeCellCount());
+				obj.simObj.AddDataWriter(WriteCellCount(20,obj.simObj.pathName));
+			end
+
+			if isnan(obj.data.membraneVolumeData)
+				obj.simObj.AddSimulationData(MembraneVolume());
+				obj.simObj.AddDataWriter(WriteMembraneVolume(20,obj.simObj.pathName));
+			end
 
 		end
 

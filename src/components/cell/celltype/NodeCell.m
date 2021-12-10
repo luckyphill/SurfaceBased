@@ -20,7 +20,9 @@ classdef NodeCell < AbstractCell
 
 			obj.cellType = 1;
 
-			% cellDataArray = [CellArea()];
+			% Can't add NodeCellVolume here because it needs to know about
+			% the simulation
+			% cellDataArray = [NodeCellVolume()];
 
 			% obj.AddCellData(cellDataArray);
 

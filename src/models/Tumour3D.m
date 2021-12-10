@@ -3,6 +3,7 @@ classdef  Tumour3D < AbstractSimulation
 
 	properties
 
+		pathName
 		simulationOutputLocation
 
 	end
@@ -87,13 +88,13 @@ classdef  Tumour3D < AbstractSimulation
 			obj.AddEdgeBasedForce( EdgeLinearSpringForce(mep) );
 			% obj.AddCellBasedForce( ConstantInternalPressure(.3) );
 
-			pathName = sprintf('Tumour3D/r%gp%gg%gf%gnns%gnms%gmep%g_seed%g/',radius, p, g, f, nns, nms, mep, seed);
+			obj.pathName = sprintf('Tumour3D/r%gp%gg%gf%gnns%gnms%gmep%g_seed%g/',radius, p, g, f, nns, nms, mep, seed);
 			obj.AddSimulationData(SpatialState());
 
-			obj.AddDataWriter(WriteSpatialState(updateFrequency, pathName));
+			obj.AddDataWriter(WriteSpatialState(updateFrequency, obj.pathName));
 
 			% A little hack to make the parameter sweeps slightly easier to handle
-			obj.simulationOutputLocation = [getenv('FACEDIR'),'/SimulationOutput/' pathName];
+			obj.simulationOutputLocation = [getenv('FACEDIR'),'/SimulationOutput/' obj.pathName];
 
 
 		end

@@ -67,14 +67,14 @@ classdef AbstractCell < handle & matlab.mixin.Heterogeneous
 
         end
 
-  %       function currentArea = GetCellArea(obj)
-		% 	% This and the following 3 functions could be replaced by accessing the cellData
-		% 	% but they're kept here for backwards compatibility, and because
-		% 	% these types of data are fundamental enough to designate a function
+        function currentVolume = GetVolume(obj)
+			% This and the following 3 functions could be replaced by accessing the cellData
+			% but they're kept here for backwards compatibility, and because
+			% these types of data are fundamental enough to designate a function
 
-		% 	currentArea = obj.cellData('cellArea').GetData(obj);
+			currentVolume = obj.cellData('cellVolume').GetData(obj);
 
-		% end
+		end
 
 		% function targetArea = GetCellTargetArea(obj)
 		% 	% This is so the target area can be a function of cell age

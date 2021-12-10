@@ -397,6 +397,10 @@ classdef SphereShell < AbstractCell
 
 			obj.OrientFaceNormals();
 
+			cellDataArray = [CellVolume()];
+
+			obj.AddCellData(cellDataArray);
+
 		end
 
 		function OrientFaceNormals(obj)
