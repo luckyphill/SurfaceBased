@@ -13,7 +13,7 @@ paramFile=$2
 module load arch/haswell
 module load matlab
 
-export EDGEDIR='/hpcfs/users/a1738927/Research/EdgeBased'
+export FACEDIR='/hpcfs/users/a1738927/Research/SurfaceBased'
 
 echo "array_job_index: $SLURM_ARRAY_TASK_ID"
 
