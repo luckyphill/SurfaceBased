@@ -12,7 +12,7 @@ classdef ManageTumour3D < MatlabSimulation
 	properties (SetAccess = private)
 
 		% Number of cells
-		radius 			double {mustBeNonnegative}
+		radius 		double {mustBeNonnegative}
 
 		% Cell cycle phase lengths
 		p 			double {mustBeNonnegative}
