@@ -19,7 +19,7 @@ classdef Tumour3DGrowth < Analysis
 		nms = 4;
 
 		mep = 1:10;
-		seed = 1:10;
+		seed = 1:20;
 
 		minimumTime = 50;
 		maximumTime = 300;
