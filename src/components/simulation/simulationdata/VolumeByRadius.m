@@ -33,13 +33,19 @@ classdef VolumeByRadius < AbstractSimulationData
 
 			volData = [];
 
-			centre = mean(reshape([t.nodeList.pos],3,[])');
+			% A cheeky hack.
+			% In a Tumour3D simulation, the first cell is actually the membrane
+			% and the first nodes in nodeList are the membrane nodes.
+			% If we start the list here after the membrane nodes then the centre calculation
+			% only accounts for NodeCell nodes
+			n = length(t.cellList(1).nodeList) + 1;
+			centre = mean(reshape([t.nodeList(n:end).pos],3,[])');
 
 			for i = 1:length(t.cellList)
 
 				c = t.cellList(i);
 				if isa(c,'NodeCell')
-					colour = c.GetColour();
+					colour = c.CellCycleModel.colour;
 					if colour ~= 2 % Not the best way to do it, but will skip this section if colour matches GROW phase
 						vol = c.GetVolume();
 						pos = c.nodeList.pos;
