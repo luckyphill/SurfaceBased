@@ -3,7 +3,7 @@ classdef  Tumour3D < AbstractSimulation
 
 	properties
 
-		% None yet
+		simulationOutputLocation
 
 	end
 
@@ -91,6 +91,9 @@ classdef  Tumour3D < AbstractSimulation
 			obj.AddSimulationData(SpatialState());
 
 			obj.AddDataWriter(WriteSpatialState(updateFrequency, pathName));
+
+			% A little hack to make the parameter sweeps slightly easier to handle
+			obj.simulationOutputLocation = [getenv('FACEDIR'),'/SimulationOutput/' pathName];
 
 
 		end
