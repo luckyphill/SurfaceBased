@@ -36,8 +36,17 @@ classdef VolumeByRadiusData < dataType
 
 		function data = retrieveData(obj, sp)
 			% Loads the data from the file and puts it in the expected format
+			% Need to read this is a format with nan padding
 
-			data = csvread(obj.getFullFileName(sp));
+			% Setting the opts for readmatrix might not be necessary, but
+			% doing it anyway because this thing is buggy as hell...
+			% it does pad with nans though which is more useful than csvread
+			opts = detectImportOptions(obj.getFullFileName(sp));
+			opts.DataLines = [1 Inf];
+			if strcmp(opts.VariableTypes{1}, 'char')
+				opts = setvartype(opts, opts.VariableNames{1}, 'double');
+			end
+			data = readmatrix(obj.getFullFileName(sp),opts);
 
 		end
 
