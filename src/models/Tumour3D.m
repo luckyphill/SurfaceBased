@@ -14,6 +14,7 @@ classdef  Tumour3D < AbstractSimulation
 
 		function obj = Tumour3D(radius, p, g, f, nns, nms, mep, seed)
 
+			obj.SetRNGSeed(seed);
 			% Input variables:
 			% radius: the initial radius of the membrane
 			% p: The pause phase duration
