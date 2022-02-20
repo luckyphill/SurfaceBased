@@ -19,7 +19,7 @@ classdef Tumour3DGrowth < Analysis
 		nms = 4;
 
 		mep = 1:10;
-		seed = 1:20;
+		seed = 21:100;
 
 		minimumTime = 50;
 		maximumTime = 300;
@@ -214,6 +214,8 @@ classdef Tumour3DGrowth < Analysis
 			% Plot the cell number
 			h = figure;
 			ax = gca;
+			hold on;
+			leg = {};
 			for i = 1:size(obj.parameterSet,1)
 
 				time = alltime{i};
@@ -222,15 +224,16 @@ classdef Tumour3DGrowth < Analysis
 				meancount = nanmean(count);
 
 				plot(ax, time, meancount,'LineWidth', 4);
+				leg{i} = num2str(obj.parameterSet(i,7));
 
 			end
 
-			legend	
+			lgd = legend(leg, 'Location','northwest');
 			ylabel('Cell Count','Interpreter', 'latex', 'FontSize', 15);
 			xlabel('time (hr)','Interpreter', 'latex', 'FontSize', 15);
 			title(sprintf('Cell count over time for different membrane strength'),'Interpreter', 'latex', 'FontSize', 22);
-			% ylim([min(obj.b)-1, max(obj.b)+1]);
-			% xlim([min(obj.spe)-1, max(obj.spe)+1]);
+			ylim([0 600]);
+			xlim([0 120]); % Chosen from the plot
 				
 
 			SavePlot(obj, h, sprintf('CountvsMembraneStrength'));
@@ -238,7 +241,9 @@ classdef Tumour3DGrowth < Analysis
 
 			% Plot the membrane volume
 			h = figure;
+			hold on;
 			ax = gca;
+			leg = {};
 			for i = 1:size(obj.parameterSet,1)
 
 				time = alltime{i};
@@ -248,18 +253,74 @@ classdef Tumour3DGrowth < Analysis
 
 				plot(ax, time, meanmemvol,'LineWidth', 4);
 
+				leg{i} = num2str(obj.parameterSet(i,7));
+
 			end
 
-			legend	
+			
+			lgd = legend(leg, 'Location','northwest');	
 			ylabel('Membrane Volume','Interpreter', 'latex', 'FontSize', 15);
 			xlabel('time (hr)','Interpreter', 'latex', 'FontSize', 15);
 			title(sprintf('Membrane volume over time for different membrane strength'),'Interpreter', 'latex', 'FontSize', 22);
-			% ylim([min(obj.b)-1, max(obj.b)+1]);
-			% xlim([min(obj.spe)-1, max(obj.spe)+1]);
+			ylim([0 30]);
+			xlim([0 120]); % Chosen from the plot
 				
 
 			SavePlot(obj, h, sprintf('VolumevsMembraneStrength'));
 
+
+			% For one parameter set, produce a plot of the 
+			% vol vs radius for a set of time steps
+
+			for i = 1:size(obj.parameterSet,1)
+
+				vrpairs = allvrpairs{i};
+
+				time = alltime{i};
+				tsteps = 1000*[1:floor(length(time)/1000 -1)] % The time steps to use
+
+				h = figure;
+				hold on;
+				ax = gca;
+
+				bins = 0.1:0.1:1.7; % For the radius
+
+				allmv = {};
+				leg = {};
+				dt = 0.001 * 10;
+				for t = tsteps
+
+					vr = vrpairs{t};
+
+					v = vr(:,1);
+					r = vr(:,2);
+
+					m = [];
+					for i = 1:length(bins)-1
+						mv(i) = mean(v(  logical( (r>bins(i)) .* (r <= bins(i+1))  )   ) );
+					end
+					
+
+					allmv{end+1} = mv;
+
+					leg{end+1} = num2str(t*dt);
+
+				end
+
+				for i = 1:length(allmv)
+
+					plot(ax, bins(2:end), allmv{i},'LineWidth', 4);
+
+				end
+
+				lgd = legend(leg, 'Location','northwest');	
+				ylabel('Volume','Interpreter', 'latex', 'FontSize', 15);
+				xlabel('Distance from centre','Interpreter', 'latex', 'FontSize', 15);
+				title(sprintf('Cell volume as a function of distance from centre'),'Interpreter', 'latex', 'FontSize', 22);
+
+				SavePlot(obj, h, sprintf('VolumevsRadius_%d', i));
+
+			end
 
 		end
 
