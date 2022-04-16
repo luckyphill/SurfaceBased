@@ -1,5 +1,5 @@
 classdef FaceNeighbours < AbstractNodeData
-	% Calculates the wiggle ratio
+	% Finds all the faces near to a node
 
 	properties 
 
@@ -51,7 +51,7 @@ classdef FaceNeighbours < AbstractNodeData
 						
 						u = dot(nToF, fUnit);
 
-						if u < obj.radius
+						if abs(u) < obj.radius
 							neighbours = [neighbours, fCheck];
 						end
 					end
