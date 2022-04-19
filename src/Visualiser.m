@@ -430,13 +430,17 @@ classdef Visualiser < matlab.mixin.SetGet
 			
 			xyzrange = [];
 			indices = [];
+			azel = []; % Azimuth and elevation for view angle
 			videoFormat = 'MPEG-4';
 			if ~isempty(varargin)
 				indices = varargin{1};
 				if length(varargin) > 1
 					xyzrange = varargin{2};
 					if length(varargin) > 2
-						videoFormat = varargin{3};
+						azel = varargin{3};
+						if length(varargin) > 3
+							videoFormat = varargin{4};
+						end
 					end
 				end
 			end
@@ -457,6 +461,10 @@ classdef Visualiser < matlab.mixin.SetGet
 				xlim(xyzrange(1:2));
 				ylim(xyzrange(3:4));
 				zlim(xyzrange(5:6));
+			end
+
+			if ~isempty(azel)
+				view(azel);
 			end
 
 			% A radius for node cells
@@ -599,17 +607,22 @@ classdef Visualiser < matlab.mixin.SetGet
 			% saved data. Usually this will be 10xt but not always
 
 			% varargin has inputs
-			% 1: plot axis range in the form [xmin,xmax,ymin,ymax]
-			% 2: plot title. can include latex
+			% 1: plot title. can include latex
+			% 2: plot axis range in the form [xmin,xmax,ymin,ymax]
+			% 3: plot view angle in the form [azimuth, elevation]
 
 			% if you want to ignore a particular input, use []
 
-			xyzrange = [];
 			plotTitle = '';
+			xyzrange = [];
+			azel = []; % Azimuth and elevation for view angle		
 			if ~isempty(varargin)
-				xyzrange = varargin{1};
+				plotTitle = varargin{1};
 				if length(varargin) > 1
-					plotTitle = varargin{2};
+					xyzrange = varargin{2};
+					if length(varargin) > 2
+						azel = varargin{3};
+					end
 				end
 			end
 
@@ -625,7 +638,9 @@ classdef Visualiser < matlab.mixin.SetGet
 
 			[I,~] = size(obj.cells);
 
-
+			if ~isempty(azel)
+				view(azel);
+			end
 
 			% A radius for node cells
 			r = 0.25;
