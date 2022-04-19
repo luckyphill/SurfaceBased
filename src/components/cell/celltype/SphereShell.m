@@ -1,7 +1,7 @@
 classdef SphereShell < AbstractCell
 	% A cell that is a thin shell unit sphere
 	% The mesh points are hard coded
-	% There are 58 nodes, 168 edges and  112 faceaces
+	% There are 58 nodes, 168 edges and  112 faces
 	% N-E+F = 2 According to Euler's formula, which holds here
 
 	properties
