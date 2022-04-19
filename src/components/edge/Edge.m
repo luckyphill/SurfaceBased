@@ -37,6 +37,11 @@ classdef Edge < matlab.mixin.SetGet
 		% Detemines if an edge is part of a membrane, hence
 		% should be subject to membrane related forces
 		isMembrane = false
+
+		edgeData
+
+		updateFrequency = 10;
+		edgeNeighbourhoodRadius = 1.5;
 		
 	end
 
@@ -58,12 +63,56 @@ classdef Edge < matlab.mixin.SetGet
 			obj.Node2.AddEdge(obj);
 
 			obj.UpdateTotalDrag();
+
+			obj.AddEdgeData(EdgeEdgeNeighbours(obj.edgeNeighbourhoodRadius, obj.updateFrequency));
 			
 		end
 
 		function delete(obj)
 
 			clear obj;
+
+		end
+
+		function AddEdgeData(obj, d)
+
+			% Need to explicitly create a map object or matlab
+			% will only point to one map object for the
+			% entire list of Nodes...
+			if isempty(obj.edgeData)
+				nD = containers.Map;
+				for i = 1:length(d)
+					nD(d(i).name) = d(i);
+				end
+				obj.edgeData = nD;
+			else
+				for i = 1:length(d)
+					obj.edgeData(d(i).name) = d(i);
+				end
+			end
+
+		end
+
+		function data = GetData(obj, name, t)
+
+			data = obj.edgeData(name).GetData(obj, t);
+
+		end
+
+		function NewUpdateFrequency(obj, updateFrequency)
+
+			% Changes the frequency that node neighbourhoods are recalculated
+			% updateFrequency is an integer giving the number of time steps to skip
+			obj.updateFrequency = updateFrequency;
+			obj.AddEdgeData(EdgeEdgeNeighbours(obj.edgeNeighbourhoodRadius, updateFrequency));
+
+		end
+
+		function NewEdgeNeighbourhoodRadius(obj, edgeNeighbourhoodRadius)
+
+			% Changes radius where we seek node neighbours
+			obj.edgeNeighbourhoodRadius = edgeNeighbourhoodRadius;
+			obj.AddEdgeData(EdgeEdgeNeighbours(edgeNeighbourhoodRadius, obj.updateFrequency));
 
 		end
 
@@ -118,6 +167,32 @@ classdef Edge < matlab.mixin.SetGet
 
 			direction1to2 = obj.Node2.pos - obj.Node1.pos;
 			midPoint = obj.Node1.pos + 0.5 * direction1to2;
+
+		end
+
+		function ApplyForce(obj, F, A)
+
+			if sum(isnan(F)) || sum(isinf(F))
+				error('N:ApplyForce:InfNaN', 'Force is inf or NaN');
+			end
+
+			% Verify that A is on the edge
+
+			% Applying a force to the face at point A
+			% This results in a linear movement, and a rotation
+
+			% Linear movement
+			obj.Node1.ApplyForce(F);
+			obj.Node2.ApplyForce(F);
+
+			% Rotation
+			rD = obj.GetCentreOfDrag();
+
+			rDA = A - rD;
+
+			torque = cross(rDA, F);
+
+			obj.ApplyTorque(torque);
 
 		end
 
