@@ -243,6 +243,22 @@ classdef Node < matlab.mixin.SetGet
 
 		end
 
+		function NewNodeNeighbourhoodRadius(obj, nodeNeighbourhoodRadius)
+
+			% Changes radius where we seek node neighbours
+			obj.nodeNeighbourhoodRadius = nodeNeighbourhoodRadius;
+			obj.AddNodeData(NodeNeighbours(nodeNeighbourhoodRadius, obj.updateFrequency));
+
+		end
+
+		function NewFaceNeighbourhoodRadius(obj, faceNeighbourhoodRadius)
+
+			% Changes the radius where we seek face neighbours
+			obj.faceNeighbourhoodRadius = faceNeighbourhoodRadius;
+			obj.AddNodeData(FaceNeighbours(faceNeighbourhoodRadius, obj.updateFrequency));
+
+		end
+
 	end
 
 	methods (Access = private)
