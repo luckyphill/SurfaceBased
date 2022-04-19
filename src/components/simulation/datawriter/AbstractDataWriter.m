@@ -174,7 +174,7 @@ classdef AbstractDataWriter < handle & matlab.mixin.Heterogeneous
 			homeDir = getenv('FACEDIR');
 
 			if isempty(homeDir)
-				error('ADW:EnvNotSet','To save output, please sent environment variable FACEDIR=[fullpathto]/EdgeBased');
+				error('ADW:EnvNotSet','To save output, please set environment variable FACEDIR=[fullpathto]/EdgeBased');
 			end
 
 			obj.rootStorageLocation = [homeDir, '/SimulationOutput/'];
