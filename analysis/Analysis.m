@@ -207,7 +207,7 @@ classdef (Abstract) Analysis < matlab.mixin.SetGet
 						obj.AssembleData();
 					end
 					result = obj.result;
-					save(obj.dataFile, 'result');
+					save(obj.dataFile, 'result', '-v7.3');
 				else
 					try
 						temp = load(obj.dataFile);
