@@ -221,7 +221,9 @@ classdef (Abstract) Analysis < matlab.mixin.SetGet
 				% If anything exists in varargin, force reassemble
 				obj.AssembleData();
 				result = obj.result;
-				save(obj.dataFile, 'result');
+				% Need to specify '-v7.3' to enable compression and storing
+				% output larger than 2GB
+				save(obj.dataFile, 'result', '-v7.3'); 
 
 			end
 
